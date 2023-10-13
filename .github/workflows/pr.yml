@@ -1,0 +1,33 @@
+name: Pull request workflow
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [synchronize, opened, reopened]
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-project:
+    name: Deploy App
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      preview-url: ${{ steps.vercel-deploy.outputs.preview-url }}
+    steps:
+      - uses: actions/checkout@v3
+        name: Checkout repo
+      - name: Vercel Preview Deployment
+        id: vercel-deploy
+        uses: ./.github/actions/deploy
+        with:
+          app-name: "Unified web"
+          github-token: ${{ secrets.GH_TOKEN }}
+          vercel-token: ${{ secrets.TEST_VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_PERSONAL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PERSONAL_PROJECT_ID }}
+          production-deployment: false
