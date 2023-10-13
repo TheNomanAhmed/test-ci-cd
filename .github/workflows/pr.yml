@@ -28,6 +28,6 @@ jobs:
           app-name: "Unified web"
           github-token: ${{ secrets.GH_TOKEN }}
           vercel-token: ${{ secrets.TEST_VERCEL_TOKEN }}
-          vercel-org-id: ${{ vars.VERCEL_PERSONAL_ORG_ID }}
-          vercel-project-id: ${{ vars.VERCEL_PERSONAL_PROJECT_ID }}
+          vercel-org-id: ${{ secrets.VERCEL_PERSONAL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PERSONAL_PROJECT_ID }}
           production-deployment: false
