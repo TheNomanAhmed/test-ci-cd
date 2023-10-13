@@ -21,8 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         name: Checkout repo
-      - uses: "./.github/actions/setup-pnpm"
-        name: Setup PNPM
       - name: Vercel Preview Deployment
         id: vercel-deploy
         uses: ./.github/actions/deploy
