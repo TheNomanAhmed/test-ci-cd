@@ -1,0 +1,72 @@
+name: Deploy to Vercel
+description: Deploy to Vercel
+inputs:
+  app-name:
+    required: true
+    description: "The deployed app's name to create a customized comment on the PR."
+  github-token:
+    required: true
+    description: "Github's token."
+  vercel-token:
+    required: true
+    description: "Vercel's token."
+  vercel-org-id:
+    required: true
+    description: "Vercel's organization id."
+  vercel-project-id:
+    required: true
+    description: "Vercel's project id."
+  alias-domain:
+    description: "Vercel's domain alias."
+  production-deployment:
+    description: "Whether the deployment will trigger a production deployment or not."
+    required: true
+    default: "false"
+
+outputs:
+  preview-url:
+    description: "Vercel's preview deployment URL."
+    value: ${{ steps.preview-url.outputs.preview-url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Deploy to Vercel
+      id: vercel-deploy
+      uses: BetaHuhn/deploy-to-vercel-action@v1
+      with:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        VERCEL_TOKEN: ${{ inputs.vercel-token }}
+        VERCEL_ORG_ID: ${{ inputs.vercel-org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.vercel-project-id }}
+        ALIAS_DOMAINS: ${{ inputs.alias-domain }}
+        PRODUCTION: ${{ inputs.production-deployment }}
+        BUILD_ENV: |
+          CONTENTFUL_SHARED_CONTENT_ENV=${{ inputs.contentful-env }}
+          CONTENTFUL_SHARED_CONTENT_ACCESS_TOKEN=${{ inputs.delivery-api-token }}
+          NEXT_PUBLIC_CONTENTFUL_ACCESS_TOKEN=${{ inputs.delivery-api-token }}
+        CREATE_COMMENT: false
+        DELETE_EXISTING_COMMENT: false
+        WORKING_DIRECTORY: ./
+    - uses: phulsechinmay/rewritable-pr-comment@v0.3.0
+      if: ${{ steps.vercel-deploy.outputs.DEPLOYMENT_CREATED }}
+      with:
+        message: |
+          <h3>${{ inputs.app-name }}</h3>
+          This pull request has been deployed to Vercel.
+          <table>
+            <tr>
+              <td><strong>✅ Preview:</strong></td>
+              <td><a href='${{ steps.vercel-deploy.outputs.PREVIEW_URL }}'>${{ steps.vercel-deploy.outputs.PREVIEW_URL }}</a></td>
+            </tr>
+            <tr>
+              <td><strong>🔍 Inspect:</strong></td>
+              <td><a href='${{ steps.vercel-deploy.outputs.DEPLOYMENT_INSPECTOR_URL }}'>${{ steps.vercel-deploy.outputs.DEPLOYMENT_INSPECTOR_URL }}</a></td>
+            </tr>
+          </table>
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        COMMENT_IDENTIFIER: "${{ inputs.app-name }}"
+
+    - id: preview-url
+      shell: bash
+      run: echo "preview-url=${{ steps.vercel-deploy.outputs.PREVIEW_URL }}" >> $GITHUB_OUTPUT
